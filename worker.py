@@ -32,9 +32,9 @@ def post_daily_quiz():
         Explanation: [explanation]
         """
         
-        # Generate content using new SDK
+        # USING gemini-1.5-flash (confirmed working)
         response = client.models.generate_content(
-            model="gemini-2.0-flash-exp",
+            model="gemini-1.5-flash",
             contents=prompt
         )
         quiz_text = response.text
