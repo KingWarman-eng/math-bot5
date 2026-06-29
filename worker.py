@@ -1,24 +1,23 @@
 import os
-import google.generativeai as genai
 from telegram import Bot
 from datetime import datetime
 import logging
+import google.generativeai as genai
 
-# Setup logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Get from GitHub Secrets
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GEMINI_KEY = os.environ.get('GEMINI_KEY')
 CHANNEL_ID = "@MatheMachineBot"
 
-# Setup Gemini
+# Configure Gemini
 genai.configure(api_key=GEMINI_KEY)
-model = genai.GenerativeModel('gemini-pro')
+
+# Use the NEW model name
+model = genai.GenerativeModel('gemini-1.5-flash')  # ← CHANGED THIS!
 
 def post_daily_quiz():
-    """Generate and post quiz"""
     try:
         logger.info("Generating quiz...")
         
