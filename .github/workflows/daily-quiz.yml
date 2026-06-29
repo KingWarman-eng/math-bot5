@@ -2,7 +2,6 @@ name: Daily Quiz Bot
 
 on:
   schedule:
-    # Runs at 8:00 AM UTC every day
     - cron: '0 8 * * *'
   workflow_dispatch:
 
@@ -26,4 +25,3 @@ jobs:
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           GEMINI_KEY: ${{ secrets.GEMINI_KEY }}
-          
