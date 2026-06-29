@@ -2,24 +2,18 @@ import os
 from telegram import Bot
 from datetime import datetime
 import logging
-import google.generativeai as genai
+import requests
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
-GEMINI_KEY = os.environ.get('GEMINI_KEY')
+DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 CHANNEL_ID = "@MatheMachineBot"
-
-# Configure Gemini with your key
-genai.configure(api_key=GEMINI_KEY)
-
-# Use a model that actually exists in the old API
-model = genai.GenerativeModel('gemini-1.0-pro')
 
 def post_daily_quiz():
     try:
-        logger.info("Generating quiz...")
+        logger.info("Generating quiz with DeepSeek...")
         
         prompt = """
         Create 5 math quiz questions for high school students.
@@ -35,8 +29,31 @@ def post_daily_quiz():
         Explanation: [explanation]
         """
         
-        response = model.generate_content(prompt)
-        quiz_text = response.text
+        # DeepSeek API call
+        url = "https://api.deepseek.com/chat/completions"
+        
+        headers = {
+            "Authorization": f"Bearer {DEEPSEEK_API_KEY}",
+            "Content-Type": "application/json"
+        }
+        
+        payload = {
+            "model": "deepseek-chat",
+            "messages": [
+                {"role": "user", "content": prompt}
+            ],
+            "max_tokens": 1000,
+            "temperature": 0.7
+        }
+        
+        response = requests.post(url, json=payload, headers=headers)
+        
+        if response.status_code != 200:
+            logger.error(f"DeepSeek API Error: {response.status_code} - {response.text}")
+            return False
+        
+        data = response.json()
+        quiz_text = data['choices'][0]['message']['content']
         
         today = datetime.now().strftime("%B %d, %Y")
         message = f"📚 **Daily Math Quiz - {today}**\n\n"
