@@ -1,8 +1,0 @@
-{
-  "engines": {
-    "node": "20.x"
-  },
-  "dependencies": {
-    "@vercel/python": "3.9.0"
-  }
-}
