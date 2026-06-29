@@ -2,7 +2,7 @@ import os
 from telegram import Bot
 from datetime import datetime
 import logging
-from google import genai
+import google.generativeai as genai
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -11,8 +11,11 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 GEMINI_KEY = os.environ.get('GEMINI_KEY')
 CHANNEL_ID = "@MatheMachineBot"
 
-# New Gemini client
-client = genai.Client(api_key=GEMINI_KEY)
+# Configure Gemini with your key
+genai.configure(api_key=GEMINI_KEY)
+
+# Use a model that actually exists in the old API
+model = genai.GenerativeModel('gemini-1.0-pro')
 
 def post_daily_quiz():
     try:
@@ -32,11 +35,7 @@ def post_daily_quiz():
         Explanation: [explanation]
         """
         
-        # USING gemini-1.5-flash (confirmed working)
-        response = client.models.generate_content(
-            model="gemini-1.5-flash",
-            contents=prompt
-        )
+        response = model.generate_content(prompt)
         quiz_text = response.text
         
         today = datetime.now().strftime("%B %d, %Y")
