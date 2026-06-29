@@ -15,7 +15,7 @@ CHANNEL_ID = "@MatheMachineBot"
 genai.configure(api_key=GEMINI_KEY)
 
 # Use the NEW model name
-model = genai.GenerativeModel('gemini-1.5-flash')  # ← CHANGED THIS!
+model = genai.GenerativeModel('gemini-1.5-flash')
 
 def post_daily_quiz():
     try:
