@@ -3,6 +3,7 @@ from telegram import Bot
 from datetime import datetime
 import logging
 import requests
+import asyncio
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -11,7 +12,7 @@ TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 CHANNEL_ID = "@MatheMachineBot"
 
-def post_daily_quiz():
+async def post_daily_quiz():
     try:
         logger.info("Generating quiz with DeepSeek...")
         
@@ -60,8 +61,9 @@ def post_daily_quiz():
         message += quiz_text
         message += "\n\n🔗 More at [mathemachine.site](https://mathemachine.site)"
         
+        # FIX: Use await with async function
         bot = Bot(token=TELEGRAM_TOKEN)
-        bot.send_message(
+        await bot.send_message(
             chat_id=CHANNEL_ID,
             text=message,
             parse_mode='Markdown'
@@ -76,5 +78,5 @@ def post_daily_quiz():
 
 if __name__ == "__main__":
     logger.info("🚀 Running Daily Quiz...")
-    post_daily_quiz()
+    asyncio.run(post_daily_quiz())
     logger.info("🏁 Job finished.")
