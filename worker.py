@@ -79,4 +79,8 @@ async def post_daily_quiz():
 if __name__ == "__main__":
     logger.info("🚀 Running Daily Quiz...")
     asyncio.run(post_daily_quiz())
+<<<<<<< HEAD
     logger.info("🏁 Job finished.")
+=======
+    logger.info("🏁 Job finished.")
+>>>>>>> 1cc395da6642e2b53ff0200a6ae4ccaeb5df14d2
