@@ -10,7 +10,9 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
-CHANNEL_ID = "@MatheMachineBot"  # Change to your channel!
+
+# YOUR CORRECT CHANNEL ID FROM @id_bot
+CHANNEL_ID = -1003850393774  # This is your channel!
 
 async def post_daily_quiz():
     try:
@@ -30,7 +32,6 @@ async def post_daily_quiz():
         Explanation: [explanation]
         """
         
-        # DeepSeek API call
         url = "https://api.deepseek.com/chat/completions"
         
         headers = {
@@ -68,7 +69,7 @@ async def post_daily_quiz():
             parse_mode='Markdown'
         )
         
-        logger.info("✅ Quiz posted successfully!")
+        logger.info(f"✅ Quiz posted successfully to channel {CHANNEL_ID}!")
         return True
         
     except Exception as e:
