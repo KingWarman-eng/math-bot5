@@ -14,24 +14,55 @@ DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 CHANNEL_ID = -1003850393774  # Your channel ID
 
 def clean_text(text):
-    """Remove ALL LaTeX and clean up formatting"""
-    # Remove all LaTeX delimiters
+    """Clean up formatting and ensure Unicode math symbols"""
+    # Remove LaTeX delimiters
     text = re.sub(r'\\\(|\\\)', '', text)
     text = re.sub(r'\\\[|\\\]', '', text)
     text = re.sub(r'\$', '', text)
     
-    # Convert LaTeX fractions to plain text
-    text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)
+    # Convert common LaTeX to Unicode
+    replacements = {
+        r'\\frac\{1\}\{2\}': '½',
+        r'\\frac\{1\}\{3\}': '⅓',
+        r'\\frac\{1\}\{4\}': '¼',
+        r'\\frac\{2\}\{3\}': '⅔',
+        r'\\frac\{3\}\{4\}': '¾',
+        r'\\frac\{([^}]+)\}\{([^}]+)\}': r'\1/\2',  # Fallback for other fractions
+        r'\\sqrt\{([^}]+)\}': r'√(\1)',
+        r'\\times': '×',
+        r'\\cdot': '·',
+        r'\\pm': '±',
+        r'\\infty': '∞',
+        r'\\sum': '∑',
+        r'\\int': '∫',
+        r'\\alpha': 'α',
+        r'\\beta': 'β',
+        r'\\gamma': 'γ',
+        r'\\theta': 'θ',
+        r'\\pi': 'π',
+        r'\\Delta': 'Δ',
+        r'\\rightarrow': '→',
+        r'\\left': '',
+        r'\\right': '',
+        r'\\\{': '{',
+        r'\\\}': '}',
+    }
     
-    # Convert square roots
-    text = re.sub(r'\\sqrt\{([^}]+)\}', r'sqrt(\1)', text)
+    for latex, unicode_char in replacements.items():
+        text = re.sub(latex, unicode_char, text)
     
-    # Fix other LaTeX
-    text = re.sub(r'\\times', 'x', text)
-    text = re.sub(r'\\cdot', '*', text)
-    text = re.sub(r'\\pm', '+/-', text)
+    # Convert x^2 to x², x^3 to x³, etc.
+    text = re.sub(r'\^2', '²', text)
+    text = re.sub(r'\^3', '³', text)
+    text = re.sub(r'\^4', '⁴', text)
+    text = re.sub(r'\^5', '⁵', text)
+    text = re.sub(r'\^6', '⁶', text)
+    text = re.sub(r'\^7', '⁷', text)
+    text = re.sub(r'\^8', '⁸', text)
+    text = re.sub(r'\^9', '⁹', text)
+    text = re.sub(r'\^0', '⁰', text)
     
-    # Clean up multiple spaces and newlines
+    # Clean up multiple spaces
     text = re.sub(r'\s+', ' ', text)
     text = re.sub(r'\n\s+', '\n', text)
     
@@ -45,36 +76,33 @@ async def post_daily_quiz():
         Create 5 math quiz questions for high school students.
         Topics: algebra, geometry, and calculus.
         
-        CRITICAL FORMATTING RULES:
-        1. Use NO LaTeX notation. NO \\(, \\), \\frac, \\sqrt, \\times.
-        2. Write everything in PLAIN TEXT.
-        3. Use '^' for powers (like x^2).
-        4. Use '/' for fractions (like 1/2).
-        5. Use 'sqrt()' for square roots.
-        6. Each question MUST be on its own line.
-        7. Format each question EXACTLY like this:
+        FORMATTING RULES:
+        1. Use LaTeX for equations but I will convert them to Unicode.
+        2. Use \\( and \\) for inline equations.
+        3. Use \\frac{1}{2} for fractions, \\sqrt{} for square roots.
+        4. Each question MUST be formatted like this:
 
-        Q1: [Question text]
-        A) [Option]
-        B) [Option]
-        C) [Option]
-        D) [Option]
+        Q1: [Question text with equations]
+        A) [Option A]
+        B) [Option B]
+        C) [Option C]
+        D) [Option D]
         Answer: [Letter]
         Explanation: [Brief explanation]
 
         Q2: [Question text]
         ...
 
-        Use this example format:
-        Q1: Solve for x: 2x^2 + 5x - 3 = 0
-        A) x = -3 or x = 1/2
-        B) x = 3 or x = -1/2
-        C) x = -1 or x = 3/2
-        D) x = 1 or x = -3/2
+        Example:
+        Q1: Solve for \\( x \\): \\( 2x^2 + 5x - 3 = 0 \\)
+        A) \\( x = -3 \\) or \\( x = \\frac{1}{2} \\)
+        B) \\( x = 3 \\) or \\( x = -\\frac{1}{2} \\)
+        C) \\( x = -1 \\) or \\( x = \\frac{3}{2} \\)
+        D) \\( x = 1 \\) or \\( x = -\\frac{3}{2} \\)
         Answer: A
-        Explanation: Using the quadratic formula: x = (-5 +/- sqrt(25 + 24))/4 = (-5 +/- 7)/4, so x = -3 or x = 1/2.
+        Explanation: Using the quadratic formula: x = (-5 ± √(25 + 24))/4 = (-5 ± 7)/4, so x = -3 or x = 1/2.
 
-        DO NOT use any symbols that look like LaTeX. Use plain text only.
+        Make sure questions are appropriate for high school level.
         """
         
         url = "https://api.deepseek.com/chat/completions"
@@ -102,14 +130,14 @@ async def post_daily_quiz():
         data = response.json()
         raw_quiz = data['choices'][0]['message']['content']
         
-        # Clean up any remaining LaTeX
+        # Clean up and convert to Unicode
         quiz_text = clean_text(raw_quiz)
         
         today = datetime.now().strftime("%B %d, %Y")
         message = f"📚 **Daily Math Quiz - {today}**\n\n"
         message += quiz_text
         message += "\n\n---\n"
-        message += "🔗 **MatheMachine.site** - Learn more at [mathemachine.site](https://mathemachine.site)"
+        message += "🔗 **MatheMachine.site** - [mathemachine.site](https://mathemachine.site)"
         
         bot = Bot(token=TELEGRAM_TOKEN)
         await bot.send_message(
