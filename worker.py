@@ -4,15 +4,32 @@ from datetime import datetime
 import logging
 import requests
 import asyncio
+import re
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
+CHANNEL_ID = -1003850393774  # Your channel ID
 
-# YOUR CORRECT CHANNEL ID FROM @id_bot
-CHANNEL_ID = -1003850393774  # This is your channel!
+def clean_text(text):
+    """Clean up LaTeX and formatting for better readability"""
+    # Remove LaTeX math delimiters
+    text = re.sub(r'\\\(|\\\)', '', text)  # Remove \( and \)
+    text = re.sub(r'\\\[|\\\]', '', text)  # Remove \[ and \]
+    text = re.sub(r'\$', '', text)  # Remove $ signs
+    
+    # Fix common LaTeX commands
+    text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)  # Simplify fractions
+    text = re.sub(r'\\sqrt\{([^}]+)\}', r'sqrt(\1)', text)  # Simplify square roots
+    text = re.sub(r'\\times', 'x', text)  # Fix multiplication
+    
+    # Clean up extra spaces
+    text = re.sub(r'\s+', ' ', text)
+    text = re.sub(r'\n\s+', '\n', text)
+    
+    return text.strip()
 
 async def post_daily_quiz():
     try:
@@ -21,15 +38,24 @@ async def post_daily_quiz():
         prompt = """
         Create 5 math quiz questions for high school students.
         Topics: algebra, geometry, and calculus.
-        Include answers and explanations.
-        Format:
-        Q1: [question]
-        A) [option]
-        B) [option]
-        C) [option]
-        D) [option]
-        Answer: [correct letter]
-        Explanation: [explanation]
+        
+        FORMAT EXACTLY LIKE THIS:
+        
+        Q1: [Question text]
+        A) [Option A]
+        B) [Option B]
+        C) [Option C]
+        D) [Option D]
+        Answer: [Letter]
+        Explanation: [Brief explanation]
+        
+        Q2: [Question text]
+        ...
+        
+        DO NOT use LaTeX symbols like \\(, \\), \\frac, \\sqrt. Use plain text instead.
+        Use 'x' for multiplication, 'sqrt()' for square roots, and '/' for fractions.
+        Keep each question and its options on separate lines.
+        Make sure questions are clear and easy to read.
         """
         
         url = "https://api.deepseek.com/chat/completions"
@@ -44,7 +70,7 @@ async def post_daily_quiz():
             "messages": [
                 {"role": "user", "content": prompt}
             ],
-            "max_tokens": 1000,
+            "max_tokens": 1500,
             "temperature": 0.7
         }
         
@@ -55,12 +81,16 @@ async def post_daily_quiz():
             return False
         
         data = response.json()
-        quiz_text = data['choices'][0]['message']['content']
+        raw_quiz = data['choices'][0]['message']['content']
+        
+        # Clean up the formatting
+        quiz_text = clean_text(raw_quiz)
         
         today = datetime.now().strftime("%B %d, %Y")
         message = f"📚 **Daily Math Quiz - {today}**\n\n"
         message += quiz_text
-        message += "\n\n🔗 More at [mathemachine.site](https://mathemachine.site)"
+        message += "\n\n---\n"
+        message += "🔗 **MatheMachine.site** - Learn more at [mathemachine.site](https://mathemachine.site)"
         
         bot = Bot(token=TELEGRAM_TOKEN)
         await bot.send_message(
@@ -69,7 +99,7 @@ async def post_daily_quiz():
             parse_mode='Markdown'
         )
         
-        logger.info(f"✅ Quiz posted successfully to channel {CHANNEL_ID}!")
+        logger.info(f"✅ Quiz posted successfully to channel!")
         return True
         
     except Exception as e:
