@@ -14,18 +14,24 @@ DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
 CHANNEL_ID = -1003850393774  # Your channel ID
 
 def clean_text(text):
-    """Clean up LaTeX and formatting for better readability"""
-    # Remove LaTeX math delimiters
-    text = re.sub(r'\\\(|\\\)', '', text)  # Remove \( and \)
-    text = re.sub(r'\\\[|\\\]', '', text)  # Remove \[ and \]
-    text = re.sub(r'\$', '', text)  # Remove $ signs
+    """Remove ALL LaTeX and clean up formatting"""
+    # Remove all LaTeX delimiters
+    text = re.sub(r'\\\(|\\\)', '', text)
+    text = re.sub(r'\\\[|\\\]', '', text)
+    text = re.sub(r'\$', '', text)
     
-    # Fix common LaTeX commands
-    text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)  # Simplify fractions
-    text = re.sub(r'\\sqrt\{([^}]+)\}', r'sqrt(\1)', text)  # Simplify square roots
-    text = re.sub(r'\\times', 'x', text)  # Fix multiplication
+    # Convert LaTeX fractions to plain text
+    text = re.sub(r'\\frac\{([^}]+)\}\{([^}]+)\}', r'\1/\2', text)
     
-    # Clean up extra spaces
+    # Convert square roots
+    text = re.sub(r'\\sqrt\{([^}]+)\}', r'sqrt(\1)', text)
+    
+    # Fix other LaTeX
+    text = re.sub(r'\\times', 'x', text)
+    text = re.sub(r'\\cdot', '*', text)
+    text = re.sub(r'\\pm', '+/-', text)
+    
+    # Clean up multiple spaces and newlines
     text = re.sub(r'\s+', ' ', text)
     text = re.sub(r'\n\s+', '\n', text)
     
@@ -39,23 +45,36 @@ async def post_daily_quiz():
         Create 5 math quiz questions for high school students.
         Topics: algebra, geometry, and calculus.
         
-        FORMAT EXACTLY LIKE THIS:
-        
+        CRITICAL FORMATTING RULES:
+        1. Use NO LaTeX notation. NO \\(, \\), \\frac, \\sqrt, \\times.
+        2. Write everything in PLAIN TEXT.
+        3. Use '^' for powers (like x^2).
+        4. Use '/' for fractions (like 1/2).
+        5. Use 'sqrt()' for square roots.
+        6. Each question MUST be on its own line.
+        7. Format each question EXACTLY like this:
+
         Q1: [Question text]
-        A) [Option A]
-        B) [Option B]
-        C) [Option C]
-        D) [Option D]
+        A) [Option]
+        B) [Option]
+        C) [Option]
+        D) [Option]
         Answer: [Letter]
         Explanation: [Brief explanation]
-        
+
         Q2: [Question text]
         ...
-        
-        DO NOT use LaTeX symbols like \\(, \\), \\frac, \\sqrt. Use plain text instead.
-        Use 'x' for multiplication, 'sqrt()' for square roots, and '/' for fractions.
-        Keep each question and its options on separate lines.
-        Make sure questions are clear and easy to read.
+
+        Use this example format:
+        Q1: Solve for x: 2x^2 + 5x - 3 = 0
+        A) x = -3 or x = 1/2
+        B) x = 3 or x = -1/2
+        C) x = -1 or x = 3/2
+        D) x = 1 or x = -3/2
+        Answer: A
+        Explanation: Using the quadratic formula: x = (-5 +/- sqrt(25 + 24))/4 = (-5 +/- 7)/4, so x = -3 or x = 1/2.
+
+        DO NOT use any symbols that look like LaTeX. Use plain text only.
         """
         
         url = "https://api.deepseek.com/chat/completions"
@@ -83,7 +102,7 @@ async def post_daily_quiz():
         data = response.json()
         raw_quiz = data['choices'][0]['message']['content']
         
-        # Clean up the formatting
+        # Clean up any remaining LaTeX
         quiz_text = clean_text(raw_quiz)
         
         today = datetime.now().strftime("%B %d, %Y")
@@ -99,7 +118,7 @@ async def post_daily_quiz():
             parse_mode='Markdown'
         )
         
-        logger.info(f"✅ Quiz posted successfully to channel!")
+        logger.info(f"✅ Quiz posted successfully!")
         return True
         
     except Exception as e:
