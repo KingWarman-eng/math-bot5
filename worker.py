@@ -27,7 +27,7 @@ def clean_text(text):
         r'\\frac\{1\}\{4\}': '¼',
         r'\\frac\{2\}\{3\}': '⅔',
         r'\\frac\{3\}\{4\}': '¾',
-        r'\\frac\{([^}]+)\}\{([^}]+)\}': r'\1/\2',  # Fallback for other fractions
+        r'\\frac\{([^}]+)\}\{([^}]+)\}': r'\1/\2',
         r'\\sqrt\{([^}]+)\}': r'√(\1)',
         r'\\times': '×',
         r'\\cdot': '·',
@@ -64,9 +64,22 @@ def clean_text(text):
     
     # Clean up multiple spaces
     text = re.sub(r'\s+', ' ', text)
-    text = re.sub(r'\n\s+', '\n', text)
     
-    return text.strip()
+    # Add proper spacing between questions
+    # Split by Q1:, Q2:, etc. and add extra newlines
+    text = re.sub(r'(Q\d+:)', r'\n\n\1', text)
+    
+    # Add spacing between options
+    text = re.sub(r'(A\)|B\)|C\)|D\))', r'\n\1', text)
+    
+    # Add spacing before Answer and Explanation
+    text = re.sub(r'(Answer:)', r'\n\n\1', text)
+    text = re.sub(r'(Explanation:)', r'\n\1', text)
+    
+    # Clean up extra newlines at start
+    text = text.strip()
+    
+    return text
 
 async def post_daily_quiz():
     try:
@@ -91,16 +104,12 @@ async def post_daily_quiz():
         Explanation: [Brief explanation]
 
         Q2: [Question text]
-        ...
-
-        Example:
-        Q1: Solve for \\( x \\): \\( 2x^2 + 5x - 3 = 0 \\)
-        A) \\( x = -3 \\) or \\( x = \\frac{1}{2} \\)
-        B) \\( x = 3 \\) or \\( x = -\\frac{1}{2} \\)
-        C) \\( x = -1 \\) or \\( x = \\frac{3}{2} \\)
-        D) \\( x = 1 \\) or \\( x = -\\frac{3}{2} \\)
-        Answer: A
-        Explanation: Using the quadratic formula: x = (-5 ± √(25 + 24))/4 = (-5 ± 7)/4, so x = -3 or x = 1/2.
+        A) [Option A]
+        B) [Option B]
+        C) [Option C]
+        D) [Option D]
+        Answer: [Letter]
+        Explanation: [Brief explanation]
 
         Make sure questions are appropriate for high school level.
         """
@@ -130,7 +139,7 @@ async def post_daily_quiz():
         data = response.json()
         raw_quiz = data['choices'][0]['message']['content']
         
-        # Clean up and convert to Unicode
+        # Clean up and convert to Unicode with proper spacing
         quiz_text = clean_text(raw_quiz)
         
         today = datetime.now().strftime("%B %d, %Y")
