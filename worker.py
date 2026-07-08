@@ -10,7 +10,7 @@ logger = logging.getLogger(__name__)
 
 TELEGRAM_TOKEN = os.environ.get('TELEGRAM_TOKEN')
 DEEPSEEK_API_KEY = os.environ.get('DEEPSEEK_API_KEY')
-CHANNEL_ID = "@MatheMachineBot"
+CHANNEL_ID = "@MatheMachineBot"  # Change to your channel!
 
 async def post_daily_quiz():
     try:
@@ -61,7 +61,6 @@ async def post_daily_quiz():
         message += quiz_text
         message += "\n\n🔗 More at [mathemachine.site](https://mathemachine.site)"
         
-        # FIX: Use await with async function
         bot = Bot(token=TELEGRAM_TOKEN)
         await bot.send_message(
             chat_id=CHANNEL_ID,
@@ -79,8 +78,4 @@ async def post_daily_quiz():
 if __name__ == "__main__":
     logger.info("🚀 Running Daily Quiz...")
     asyncio.run(post_daily_quiz())
-<<<<<<< HEAD
     logger.info("🏁 Job finished.")
-=======
-    logger.info("🏁 Job finished.")
->>>>>>> 1cc395da6642e2b53ff0200a6ae4ccaeb5df14d2
